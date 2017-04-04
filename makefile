@@ -2,7 +2,7 @@ NAME='cmind'
 PREFIX='/usr'
 TEMPDIR := $(shell mktemp -u --suffix .$(cmind))
 
-cmind: src/cmind
+src/cmind:
 
 install:
 	install -Dm755 src/$(NAME) $(PREFIX)/bin/$(NAME)
