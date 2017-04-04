@@ -24,7 +24,7 @@ pkgver() {
 }
 
 build() {
-    cd "$srcdir/$pkgname"
+    cd ${srcdir}/${_gitname}
     make
     }
 
