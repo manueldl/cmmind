@@ -3,7 +3,7 @@ PREFIX='/usr'
 TEMPDIR := $(shell mktemp -u --suffix .$(cmind))
 
 cmind:
-	cc src/cmind.c -o src/cmind
+	cc -march=native -mtune=native -O2 src/cmind.c -o src/cmind
 
 install:
 	install -Dm755 src/$(NAME) $(PREFIX)/bin/$(NAME)
