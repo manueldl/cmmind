@@ -19,3 +19,12 @@ togit: clean
 	git add .
 	git commit -m "Updated from makefile"
 	git push origin
+
+pacman:
+	mkdir $(TEMPDIR)
+	cp packages/pacman/PKGBUILD $(TEMPDIR)/
+	cd $(TEMPDIR); makepkg -dr
+	cp $(TEMPDIR)/$(NAME)-*.pkg.tar.xz packages/pacman/
+	rm -rf $(TEMPDIR)
+	@echo Package done!
+	@echo Package is in `pwd`/packages/pacman/
