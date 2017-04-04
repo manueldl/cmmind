@@ -15,7 +15,7 @@ uninstall:
 clean:
 	rm -f src/$(NAME)
 
-togit:
+togit: clean
 	git add .
 	git commit -m "Updated from makefile"
 	git push origin
