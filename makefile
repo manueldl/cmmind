@@ -2,10 +2,10 @@ NAME='cmind'
 PREFIX='/usr'
 TEMPDIR := $(shell mktemp -u --suffix .$(cmind))
 
-cmind: src/$(NAME)
+cmind: src/cmind
 
 install:
-	install -Dm755 src/$(NAME) $(INSTALLDIR)/bin/$(NAME)
+	install -Dm755 src/$(NAME) $(PREFIX)/bin/$(NAME)
 	install -Dm644 LICENSE $(PREFIX)/share/licenses/$(NAME)/LICENSE
 
 uninstall:
