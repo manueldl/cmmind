@@ -7,7 +7,7 @@ cmind:
 
 install:
 	install -Dm 755 src/$(NAME) $(PREFIX)/bin/$(NAME)
-	install -Dm 644 LICENSE $(PREFIX)/share/licenses/$(NAME)/LICENSE
+	install -Dm 644 LICENSE $(PREFIX)/share/licenses/$(NAME)/COPYING
 	install -Dm 644 README.md $(PREFIX)/share/doc/$(NAME)/README
 
 uninstall:
