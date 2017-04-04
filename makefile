@@ -6,8 +6,9 @@ cmind:
 	cc -march=native -mtune=native -O2 src/cmind.c -o src/cmind
 
 install:
-	install -Dm755 src/$(NAME) $(PREFIX)/bin/$(NAME)
-	install -Dm644 LICENSE $(PREFIX)/share/licenses/$(NAME)/LICENSE
+	install -Dm 755 src/$(NAME) $(PREFIX)/bin/$(NAME)
+	install -Dm 644 LICENSE $(PREFIX)/share/licenses/$(NAME)/LICENSE
+	install -Dm 644 README.md $(PREFIX)/share/doc/$(NAME)/README
 
 uninstall:
 	rm -f $(PREFIX)/bin/$(NAME)
