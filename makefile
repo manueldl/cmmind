@@ -9,7 +9,7 @@ install:
 	install -Dm644 LICENSE $(PREFIX)/share/licenses/$(NAME)/LICENSE
 
 uninstall:
-	rm -f $(INSTALLDIR)/bin/$(NAME)
+	rm -f $(PREFIX)/bin/$(NAME)
 	rm -f $(PREFIX)/share/licenses/$(NAME)/LICENSE
 
 clean:
