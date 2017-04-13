@@ -1,3 +1,5 @@
+![retrosmart-preview](https://raw.githubusercontent.com/manueldl/cmind/master/preview.png "cmind running")
+
 cmind
 =====
 
