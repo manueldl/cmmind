@@ -1,54 +1,71 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <time.h>
-#include <unistd.h>
 
-#define randomize ( srand(time(NULL) + getpid()) )
-#define random(limit) ( rand() % (limit) )
+/* ANSI COLORS: */
+
+#define RED     "\x1b[31m"
+#define GREEN   "\x1b[32m"
+#define YELLOW  "\x1b[33m"
+#define BLUE    "\x1b[34m"
+#define MAGENTA "\x1b[35m"
+#define CYAN    "\x1b[36m"
+#define RESET   "\x1b[0m"
 
 #define COLORSC 6 /* El tamaño de la gama */
 #define SECRETC 4 /* El tamaño del código */
 #define MAXTRIES 10 /* El número de intentos */
 
-const char okposition[] = "!"; /* El carácter de posición correcta */
-const char okcolor[] = "?"; /* El caracter de color correcto */
-const char okwhite[] = " "; /* Espacio de relleno */
-const char mark = '|'; /* El cursor */
+int wingame;
+size_t tries;
+int ngames = 0;
+int endgame = 1;
 
-char colors[] = "abcdef"; /* El código de 'colores' válido */
-char tryhist[MAXTRIES][SECRETC + 1]; /* Historial de intentos */
-char resulthist[MAXTRIES][SECRETC + 1]; /* Historial de resultados */
+char *input;
+char *playagain;
 
 char secret[SECRETC + 1]; /* El +1 es para el \0 */
-char try[SECRETC + 1];
-char result[SECRETC + 1];
-
+char colors[] = "abcdef"; /* El código de 'colores' válido */
 unsigned short i, j; /* Contadores */
-unsigned short endgame;
-unsigned short tries;
 
-char user[] = ""; /* Se rellenará luego con el nombre del jugador.
-¿Es el modo correcto de hacerlo? ¿No sobreescribirá memoria? */
+unsigned int sleep(unsigned int seconds);
+void replay(void);
 
 
-int nanosleep(const struct timespec *req, struct timespec *rem);
-
-void clearscreen (void)
+void banner(void)
 {
-    printf( "\033[2J" ); /* Esto no parece que sea portable */
+    puts( GREEN"\n\n"
+            " ********************************* \n"
+            "*" RESET "                 _           _   " GREEN "*\n"
+            "*" RESET "                (_)         | |  " GREEN "*\n"
+            "*" RESET "   ___ _ __ ___  _ _ __   __| |  " GREEN "*\n"
+            "*" RESET "  / __| '_ ` _ \\| | '_ \\ / _` |" GREEN "  *\n"
+            "*" RESET " | (__| | | | | | | | | | (_| |  " GREEN "*\n"
+            "*" RESET "  \\___|_| |_| |_|_|_| |_|\\__,_|" GREEN "  *\n"
+            "*" RESET "                                 " GREEN "*\n"
+            " ********************************* \n");
 }
 
+void start(void)
+{
+    printf(
+            "\n"
+            RESET "Valid characteres are a, b, c, d, e, f\n"
+            "--------------------------------------\n\n"
+            "                                      \n"
 
-void gensecret ( void )
+            RESET "%ld) " YELLOW "CPU: " RESET "****\n", tries);
+}
+
+void gensecret (void)
 /* Genera el código secreto */
 {
     char aux[COLORSC];
 
     for (i = 0; i < COLORSC; i++)
     {
-        j = random(COLORSC);
+        j = rand() % (COLORSC);
         aux[i] = colors[j];
     }
 
@@ -56,252 +73,312 @@ void gensecret ( void )
     {
         secret[i] = aux[i];
     }
+    /* strcpy(secret, "cebb"); */
 }
 
 
-void gettry(void)
-/* Toma y valida el intento del jugador */
+int getinput(void)
 {
-    if (tries != MAXTRIES)
-    {
-        do
-        {
-            printf ("   ---------\n  %s: ", user);
-            scanf("%s", tryhist[tries] );
-        } while ( strlen(tryhist[tries]) != SECRETC ); /* Comprueba que
-        el número de caracteres del intento sea igual que el del
-        código secreto antes de seguir */
+        int retval;
+        printf(BLUE "You: " RESET);
+        retval = scanf("%s", input);
 
-        strcpy(try, tryhist[tries]); /* Guardamos una copia */
+        if (retval == -1) return 0;
+
+        while (
+                (strlen(input) < SECRETC) ||
+                (strlen(input) > SECRETC)
+                )
+        {
+            printf("%ld) " RED "CPU: "
+                    RESET "Sorry. I want only 4 letters.\n"
+                    "Try again:\n", tries);
+
+            free(input);
+            input = (char*)malloc(SECRETC + 1);
+
+            printf(MAGENTA "You: " RESET);
+            retval = scanf("%s", input);
+            if (retval == -1) return 0;
+        };
+
+
+        return 1;
+}
+
+void help(void)
+{
+    puts(MAGENTA "CPU: " GREEN "Guess the secret code!!!" RESET);
+}
+
+
+void info(void)
+{
+	puts(MAGENTA "CPU: " RESET "This is CMind® by mdomlop.\n\n"
+	"Copyright: 2020 Manuel Domínguez López <mdomlop@gmail.com>\n\n"
+"License: GPL-3+\n\n"
+" This program is free software: you can redistribute it and/or modify\n"
+" it under the terms of the GNU General Public License as published by\n"
+" the Free Software Foundation, either version 3 of the License, or\n"
+" (at your option) any later version.\n");
+
+	puts(" This package is distributed in the hope that it will be useful,\n"
+" but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+" GNU General Public License for more details.\n");
+
+	puts(" You should have received a copy of the GNU General Public License\n"
+" along with this program. If not, see <https://www.gnu.org/licenses/>.\n");
+
+	puts(" On Debian systems, the complete text of the GNU General\n"
+" Public License version 3 can be found in \"/usr/share/common-licenses/GPL-3\".\n"
+"\n"
+" On Arch systems, the complete text of the GNU General\n"
+" Public License version 3 can be found in \"/usr/share/licenses/common/GPL3/license.txt\".\n"
+"\n"
+
+" You can find the latest version of the source code at:\n <https://github.com/mdomlop/cmind>.\n"
+	RESET);
+}
+
+
+int hacks(const char * hack)
+{
+    if(!strcmp(hack, "show"))
+    {
+        printf( MAGENTA "CPU: "
+                RESET "%s\n", secret);
         tries++;
+        return 1;
     }
-    else
+    else if(!strcmp(hack, "iwin"))
     {
-        endgame = 1;
+        wingame = 1;
+        return 1;
     }
+    else if(!strcmp(hack, "lose"))
+    {
+        tries = 1;
+        return 1;
+    }
+    else if(!strcmp(hack, "logo"))
+    {
+        tries++;
+        banner();
+        return 1;
+    }
+    else if(!strcmp(hack, "help"))
+    {
+        tries++;
+        help();
+        return 1;
+    }
+    else if(!strcmp(hack, "info"))
+    {
+        tries++;
+        banner();
+        sleep(1);
+        info();
+        return 1;
+    }
+    else if(!strcmp(hack, "more"))
+    {
+        tries += 2;
+        printf(MAGENTA "CPU: " RESET "You have now %ld tries.\n ", tries -1);
+        return 1;
+    }
+    else if(!strcmp(hack, "less"))
+    {
+        tries++ ;
+        puts(MAGENTA "CPU: " RESET "Dumb, play the fucking game.\n");
+        return 1;
+    }
+    else if(!strcmp(hack, "time"))
+    {
+        tries++ ;
+        puts(MAGENTA "CPU: " RESET "It's soon. You can finish this game.\n");
+        return 1;
+    }
+    else if(!strcmp(hack, "hool"))
+    {
+        tries++ ;
+        puts(MAGENTA "CPU: " RESET "HoOLolOo.\n");
+        return 1;
+    }
+    else if(!strcmp(hack, "exit"))
+    {
+        puts(MAGENTA "CPU: " RESET "Quitting.\n");
+        exit(0);
+    }
+    else if(!strcmp(hack, "quit"))
+    {
+        puts(MAGENTA "CPU: " RESET "Exiting.\n");
+        exit(0);
+    }
+    return 0;
+}
+
+int validate(const char * s)
+{
+    int i, j;
+    char v[] = "abcdef";
+    int vsz = sizeof(v) - 1;
+    int ret = 0;
+
+    for (i=0; i<SECRETC; i++)
+    {
+        ret = 0;
+        for (j=0; j < vsz ; j++)
+        {
+            if(s[i] == v[j]) break;
+            else ret++;
+        }
+
+        if(ret == vsz )
+        {
+            tries++ ;
+            printf(RED "CPU: " RESET "Invalid character: " RED "%c" RESET ".\n", s[i]);
+            return 1;
+        }
+    }
+
+
+    return 0;
 }
 
 
-void head (int switcher)
-/* El encabezado. Sólo muestra el código secreto si se ha acabado el
-juego, ya sea por victoria o derrota. Esta condición viene evaluada
-desde el exterior en el argumento, que funciona como un interruptor */
+int compare(void)
 {
-    char shadow[SECRETC + 1] = "****";
+    int i, j;
+    int okpos = 0;
+    int okcol = 0;
+    char code[] = "    ";
+    char input_aux[] =  "xxxx";  /* Para marcar */
+    char secret_aux[] =  "xxxx";  /* Para marcar */
 
-    if ( switcher == 0 ) /* El juego no ha acabado */
+    if(hacks(input) == 1)
+        return 0;
+
+    if(validate(input) == 1) return 0;
+
+    for (i=0; i < SECRETC; i++)  /* Find ! */
     {
-        printf("\n  cpu:  %s\n", shadow);
-    }
-    else
-    {
-        printf("\n  cpu:  %s\n", secret);
-    }
-
-    puts("   ---------");
-}
-
-
-void scoreboard (void)
-/* El marcador de resultados */
-{
-    j = 0;
-
-    for (i = 0; i < MAXTRIES; i++)
-    {
-        if (j < COLORSC)
-        /* Imprime el lado izquiedo con la gama en vertical */
+        if(input[i] == secret[i])
         {
-            printf ("%c", colors[j]);
-            j++;
-        }
-        else
-        {
-            printf(" ");
-        }
-/*---------------------------------------------------------------------------*/
-        if ( i < tries )
-        /* Imprime el lado derecho con los resultados */
-        {
-            printf("  %s %s\n", resulthist[i], tryhist[i]);
-        }
-        else if ( i == tries )
-        {
-            printf(" %cxxxx ----\n", mark);
-        }
-        else
-        {
-            printf("  xxxx ----\n");
-        }
-    }
-}
-
-
-void compare ( void )
-/* FIXME: Puede que sobrescriba memoria. Probar en otras plataformas. */
-/* Devuelve los resultados de la comparación */
-{
-    int okp = 0; /* Posiciones correctas (número de ?s) */
-    int okc = 0; /* Colores correctos (número de !s) */
-    int okt = 0; /* Espacios blancos correctos (número de ' 's) */
-
-    char saux[SECRETC + 1]; /* Se hacen unas copias de secret y try */
-    char taux[SECRETC + 1]; /* porque sus valores se van a modificar */
-
-    strcpy(saux, secret);
-    strcpy(taux, try);
-
-    /* Comprobamos los !s */
-    for ( i = 0; i < SECRETC; i++ )
-    {
-        if ( saux[i] == '-') { continue;}
-        if ( taux[i] == saux[i] )
-        {
-            saux[i] = '-';
-            taux[i] = '-';
-            okp++;
+		/* printf("Found POS: %d %d\n", i, okpos); */
+            okpos++;
+            input_aux[i] = '-';
+            secret_aux[i] = '-';
+            continue;
         }
     }
 
-    /* Comprobamos los ?s */
-    for ( i = 0; i < SECRETC; i++ )
+    for (i=0; i < SECRETC; i++)  /* Find ? */
     {
-        for (j = 0; j < SECRETC; j++)
+		if (input_aux[i] == '-') continue;
+        for (j=0; j < SECRETC; j++)
         {
-            if ( taux[i] == '-') { continue;}
-            if ( saux[j] == '-') { continue;}
-            if ( taux[i] == saux[j] )
+			if (secret_aux[j] == '-') continue;
+            if(input[i] == secret[j])
             {
-                saux[j] = '-';
-                taux[i] = '-';
-                okc++;
+                okcol++;
+                input_aux[i] = '-';
+                secret_aux[j] = '-';
+                break;
             }
         }
     }
 
-    /* Comprobamos los ' 's */
-    okt = SECRETC - okp - okc;
 
-    strcpy(result, ""); /* Vaciamos la cadena */
-    for ( i = 0; i < okp; i++ ) strcat(result, okposition);
-    for ( i = 0; i < okc; i++ ) strcat(result, okcolor);
-    for ( i = 0; i < okt; i++ ) strcat(result, okwhite);
+    for (i=0; i < okpos; i++)
+	{
+		/* printf("POS: %d ! %d\n", i, okpos); */
+		code[i] = '!';
+	}
+    for (i=okpos; i < okcol + okpos; i++)
+	{
+		/* printf("COL: %d ? %d\n", i, okcol); */
+		code[i] = '?';
+	}
+    printf("%ld) " YELLOW "CPU: "
+            RESET "%s\n", tries - 1, code);
 
-    strcpy(resulthist[tries - 1], result); /* tries - 1 porque ya se
-    incrementó en la anterior llamada a gettry() */
-
-    if (okp == SECRETC) /* Se ha ganado el juego */
-    {
-        clearscreen();
-        head(1);
-        scoreboard();
-        printf("\n\n¡Has ganado!\n");
-        endgame = 1;
-    }
-    else if ( tries == MAXTRIES ) /* Se ha perdido */
-    {
-        clearscreen();
-        head(1);
-        scoreboard();
-        printf("\n\nLo siento, has perdido.\n");
-        endgame = 1;
-    }
-}
-
-
-void newgame(void)
-/* Contadores a 0 */
-{
-    gensecret();
-
-    endgame = 0;
-    tries = 0;
-}
-
-
-void play (void)
-/* La partida entra en un bucle condicionado por endgame */
-{
-    while (endgame == 0)
-    {
-        clearscreen();
-        head(0);
-        scoreboard();
-        gettry();
-        compare();
-    }
-}
-
-
-void ossleep(int sec, int nsec)
-/* Función sleep con precisión de milisegundos */
-{
-    struct timespec delay;
-    delay.tv_sec = sec;
-    delay.tv_nsec = nsec * 1000000;
-    nanosleep(&delay, NULL);
-}
-
-
-void exitgame(void)
-/* Se ejecuta cuando el jugador no quiere echar otra partida */
-{
-    const char banner[] = "\n\nGracias por jugar.\n\n:-)\n";
-
-    for ( i = 0; i < strlen(banner); i++ ) /* Un adornito */
-    {
-        putchar(banner[i]);
-        fflush(stdout);
-        ossleep(0, 200);
-    }
-
-    ossleep(0, 200 * 3);
-}
-
-
-void replay(void)
-/* Interactúa con el jugador para evaluar si se quiere jugar otra vez */
-{
-
-    char playmore[3]; /* letra + \n + \0 */
-    char s[] = "s";
-    char n[] = "n";
-
-    do
-    {
-        printf("¿Quieres volver a jugar? (s/n): ");
-
-        scanf(" %s", playmore);
-
-        if ( strcmp(playmore, s) == 0 ) { newgame(); play(); }
-        else if ( strcmp(playmore, n) == 0 ) { exitgame(); }
-        else { printf("\nPor favor, contesta Sí o No.\n"); }
-
-    } while( strcmp(playmore, n) != 0);
-}
-
-
-void getuser (void)
-/* Detección del entorno donde se ejecuta el programa */
-{
-    strcpy( user, getenv("USER") );
-
-    if ( strlen(user) == 0) /* Por si acaso */
-    {
-        strcpy( user, "Jugador" );
-    }
-}
-
-
-int main ( void )
-{
-    getuser();
-
-    randomize;
-
-    newgame();
-    play();
-    replay();
+    if(okpos == SECRETC) wingame = 1;
 
     return 0;
 }
+
+void play(void)
+{
+
+    tries = MAXTRIES;
+    banner();
+    start();
+    gensecret();
+    wingame = 0;
+    ngames++;
+
+    while(tries)
+    {
+
+        if (!getinput()) exit(0);  /* Exit on Ctrl+D */
+        compare();
+        if (wingame) break;
+        tries--;
+    }
+    replay();
+}
+
+
+
+void exitgame(void)
+{
+    puts(RESET "Thank you for playing cmind.");
+}
+
+void replay(void)
+{
+    char answer[100];
+
+    if (wingame)
+    printf(YELLOW "\nCPU: "
+            RESET "You win! The secret was "
+            CYAN "%s\n", secret);
+    else
+    printf(YELLOW "\nCPU: "
+            RESET "You lose! The secret was "
+            CYAN "%s\n", secret);
+
+
+    puts(RESET "Do you want to play again? (y/N).");
+
+    do
+    {
+    scanf("%s", answer);
+    } while(
+            ((answer[0] != 'y') && (answer[1] != '\0')) ||
+            ((answer[0] != 'n') && (answer[1] != '\0'))
+            );
+
+    if(answer[0] == 'y')
+    play();
+    else if(answer[0] == 'n')
+    exitgame();
+    else puts("NOOOooo");
+}
+
+
+int main(void)
+{
+    input = (char*)malloc(SECRETC + 1);
+
+    srand(time(NULL));
+    ngames++;
+
+    play();
+
+    printf(RESET);
+    getchar();
+    return 0;
+}
+
