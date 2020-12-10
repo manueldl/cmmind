@@ -1,7 +1,7 @@
 NAME = CMind
 EXECUTABLE = cmind
 DESCRIPTION = Simple console temperature monitor for Linux.
-VERSION = 1.0b
+VERSION = 0.10b
 AUTHOR = Manuel Domínguez López
 MAIL := $(shell echo zqbzybc@tznvy.pbz | tr '[A-Za-z]' '[N-ZA-Mn-za-m]')
 URL = https://github.com/mdomlop/$(EXECUTABLE)

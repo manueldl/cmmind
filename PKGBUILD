@@ -5,7 +5,7 @@ _pkgver_month=07
 _pkgver_day=26
 
 pkgname=cmind
-pkgver=1.0b
+pkgver=0.10b
 pkgrel=1
 pkgdesc='Simple console temperature monitor for Linux.'
 arch=('i686' 'x86_64')
