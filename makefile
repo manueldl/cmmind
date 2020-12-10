@@ -35,7 +35,7 @@ clean: arch_clean
 	rm -rf src/$(EXECUTABLE)
 
 arch_pkg: $(ARCHPKG)
-$(ARCHPKG): PKGBUILD Makefile src/$(EXECUTABLE) LICENSE README.md
+$(ARCHPKG): PKGBUILD makefile src/$(EXECUTABLE) LICENSE README.md
 	sed -i "s|pkgname=.*|pkgname=$(EXECUTABLE)|" PKGBUILD
 	sed -i "s|pkgver=.*|pkgver=$(VERSION)|" PKGBUILD
 	sed -i "s|pkgdesc=.*|pkgdesc='$(DESCRIPTION)'|" PKGBUILD

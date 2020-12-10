@@ -19,4 +19,4 @@ Run:
 
 or
 
-	make arch_pkg && pacman -U *.pkg*
+	make arch_pkg && pacman -U *.pkg.*
