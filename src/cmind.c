@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define VERSION "0.10b"
+
 /* ANSI COLORS: */
 
 #define RED     "\x1b[31m"
@@ -13,9 +15,9 @@
 #define CYAN    "\x1b[36m"
 #define RESET   "\x1b[0m"
 
-#define COLORSC 6 /* El tamaño de la gama */
-#define SECRETC 4 /* El tamaño del código */
-#define MAXTRIES 10 /* El número de intentos */
+#define COLORSC 6 /* Number of colors */
+#define SECRETC 4 /* Secret code size */
+#define MAXTRIES 10 /* Number of attempts */
 
 int wingame;
 size_t tries;
@@ -25,9 +27,9 @@ int endgame = 1;
 char *input;
 char *playagain;
 
-char secret[SECRETC + 1]; /* El +1 es para el \0 */
-char colors[] = "abcdef"; /* El código de 'colores' válido */
-unsigned short i, j; /* Contadores */
+char secret[SECRETC + 1]; /* The +1 is for \0 */
+char colors[] = "abcdef"; /* Valid 'colors' */
+unsigned short i, j; /* Counters */
 
 unsigned int sleep(unsigned int seconds);
 void replay(void);
@@ -47,6 +49,7 @@ void banner(void)
             " ********************************* \n");
 }
 
+
 void start(void)
 {
     printf(
@@ -58,8 +61,9 @@ void start(void)
             RESET "%ld) " YELLOW "CPU: " RESET "****\n", tries);
 }
 
+
 void gensecret (void)
-/* Genera el código secreto */
+/* Generate the secret code */
 {
     char aux[COLORSC];
 
@@ -106,6 +110,7 @@ int getinput(void)
         return 1;
 }
 
+
 void help(void)
 {
     puts(MAGENTA "CPU: " GREEN "Guess the secret code!!!" RESET);
@@ -114,30 +119,33 @@ void help(void)
 
 void info(void)
 {
-	puts(MAGENTA "CPU: " RESET "This is CMind® by mdomlop.\n\n"
-	"Copyright: 2020 Manuel Domínguez López <mdomlop@gmail.com>\n\n"
-"License: GPL-3+\n\n"
-" This program is free software: you can redistribute it and/or modify\n"
-" it under the terms of the GNU General Public License as published by\n"
-" the Free Software Foundation, either version 3 of the License, or\n"
-" (at your option) any later version.\n");
+	printf(MAGENTA "CPU: " RESET "This is CMind® version %s by mdomlop.\n\n\n",
+		   VERSION);
+
+	puts("Copyright: 2020 Manuel Domínguez López <mdomlop@gmail.com>\n\n"
+	"License: GPL-3+\n\n"
+	" This program is free software: you can redistribute it and/or modify\n"
+	" it under the terms of the GNU General Public License as published by\n"
+	" the Free Software Foundation, either version 3 of the License, or\n"
+	" (at your option) any later version.\n");
 
 	puts(" This package is distributed in the hope that it will be useful,\n"
-" but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-" GNU General Public License for more details.\n");
+	" but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+	" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+	" GNU General Public License for more details.\n");
 
 	puts(" You should have received a copy of the GNU General Public License\n"
-" along with this program. If not, see <https://www.gnu.org/licenses/>.\n");
+	" along with this program. If not, see"
+	" <https://www.gnu.org/licenses/>.\n");
 
 	puts(" On Debian systems, the complete text of the GNU General\n"
-" Public License version 3 can be found in \"/usr/share/common-licenses/GPL-3\".\n"
-"\n"
-" On Arch systems, the complete text of the GNU General\n"
-" Public License version 3 can be found in \"/usr/share/licenses/common/GPL3/license.txt\".\n"
-"\n"
-
-" You can find the latest version of the source code at:\n <https://github.com/mdomlop/cmind>.\n"
+	" Public License version 3 can be found in"
+	" \"/usr/share/common-licenses/GPL-3\".\n\n"
+	" On Arch systems, the complete text of the GNU General\n"
+	" Public License version 3 can be found in"
+	" \"/usr/share/licenses/common/GPL3/license.txt\".\n\n"
+	" You can find the latest version of the source code at:\n"
+	" <https://github.com/mdomlop/cmind>.\n"
 	RESET);
 }
 
@@ -199,6 +207,12 @@ int hacks(const char * hack)
         puts(MAGENTA "CPU: " RESET "It's soon. You can finish this game.\n");
         return 1;
     }
+    else if(!strcmp(hack, "wool"))
+    {
+        tries++ ;
+        puts(MAGENTA "CPU: " RESET "WoOLolOo.\n");
+        return 1;
+    }
     else if(!strcmp(hack, "hool"))
     {
         tries++ ;
@@ -217,6 +231,7 @@ int hacks(const char * hack)
     }
     return 0;
 }
+
 
 int validate(const char * s)
 {
@@ -237,7 +252,8 @@ int validate(const char * s)
         if(ret == vsz )
         {
             tries++ ;
-            printf(RED "CPU: " RESET "Invalid character: " RED "%c" RESET ".\n", s[i]);
+            printf(RED "CPU: " RESET "Invalid character: " RED "%c"
+			RESET ".\n", s[i]);
             return 1;
         }
     }
@@ -253,8 +269,8 @@ int compare(void)
     int okpos = 0;
     int okcol = 0;
     char code[] = "    ";
-    char input_aux[] =  "xxxx";  /* Para marcar */
-    char secret_aux[] =  "xxxx";  /* Para marcar */
+    char input_aux[] =  "xxxx";  /* marks */
+    char secret_aux[] =  "xxxx";  /* marks */
 
     if(hacks(input) == 1)
         return 0;
@@ -308,6 +324,7 @@ int compare(void)
     return 0;
 }
 
+
 void play(void)
 {
 
@@ -330,11 +347,11 @@ void play(void)
 }
 
 
-
 void exitgame(void)
 {
     puts(RESET "Thank you for playing cmind.");
 }
+
 
 void replay(void)
 {
@@ -350,7 +367,7 @@ void replay(void)
             CYAN "%s\n", secret);
 
 
-    puts(RESET "Do you want to play again? (y/N).");
+    puts(RESET "\nDo you want to play again? (y/N).");
 
     do
     {
@@ -381,4 +398,3 @@ int main(void)
     getchar();
     return 0;
 }
-
