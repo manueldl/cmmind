@@ -5,8 +5,16 @@
 
 #define VERSION "0.10b"
 
+#ifdef _WIN32
+#define RED     ""
+#define GREEN   ""
+#define YELLOW  ""
+#define BLUE    ""
+#define MAGENTA ""
+#define CYAN    ""
+#define RESET   ""
+#else
 /* ANSI COLORS: */
-
 #define RED     "\x1b[31m"
 #define GREEN   "\x1b[32m"
 #define YELLOW  "\x1b[33m"
@@ -14,6 +22,7 @@
 #define MAGENTA "\x1b[35m"
 #define CYAN    "\x1b[36m"
 #define RESET   "\x1b[0m"
+#endif
 
 #define COLORSC 6 /* Number of colors */
 #define SECRETC 4 /* Secret code size */
@@ -22,17 +31,19 @@
 int wingame;
 size_t tries;
 int ngames = 0;
+int victories = 0;
+int defeats = 0;
 int endgame = 1;
 
 char *input;
 char *playagain;
 
 char secret[SECRETC + 1]; /* The +1 is for \0 */
-char colors[] = "abcdef"; /* Valid 'colors' */
-unsigned short i, j; /* Counters */
+char colors[] = "abcdef"; /* Valid 'colors' */ /* TODO: Dynamically generate from COLORSC */
 
 unsigned int sleep(unsigned int seconds);
 void replay(void);
+void stat(void);
 
 
 void banner(void)
@@ -52,8 +63,7 @@ void banner(void)
 
 void start(void)
 {
-    printf(
-            "\n"
+    printf( "\n"
             RESET "Valid characteres are a, b, c, d, e, f\n"
             "--------------------------------------\n\n"
             "                                      \n"
@@ -65,6 +75,7 @@ void start(void)
 void gensecret (void)
 /* Generate the secret code */
 {
+	int i, j;
     char aux[COLORSC];
 
     for (i = 0; i < COLORSC; i++)
@@ -83,31 +94,31 @@ void gensecret (void)
 
 int getinput(void)
 {
-        int retval;
-        printf(BLUE "You: " RESET);
+    int retval;
+    printf(BLUE "You: " RESET);
+    retval = scanf("%s", input);
+
+    if (retval == -1) return 0;
+
+    while (
+            (strlen(input) < SECRETC) ||
+            (strlen(input) > SECRETC)
+            )
+    {
+        printf("%ld) " RED "CPU: "
+                RESET "Sorry. I want only 4 letters.\n"
+                "Try again:\n", tries);
+
+        free(input);
+        input = (char*)malloc(SECRETC + 1);
+
+        printf(MAGENTA "You: " RESET);
         retval = scanf("%s", input);
-
         if (retval == -1) return 0;
-
-        while (
-                (strlen(input) < SECRETC) ||
-                (strlen(input) > SECRETC)
-                )
-        {
-            printf("%ld) " RED "CPU: "
-                    RESET "Sorry. I want only 4 letters.\n"
-                    "Try again:\n", tries);
-
-            free(input);
-            input = (char*)malloc(SECRETC + 1);
-
-            printf(MAGENTA "You: " RESET);
-            retval = scanf("%s", input);
-            if (retval == -1) return 0;
-        };
+    };
 
 
-        return 1;
+    return 1;
 }
 
 
@@ -173,6 +184,12 @@ int hacks(const char * hack)
     {
         tries++;
         banner();
+        return 1;
+    }
+    else if(!strcmp(hack, "stat"))
+    {
+        tries++;
+        stat();
         return 1;
     }
     else if(!strcmp(hack, "help"))
@@ -325,19 +342,26 @@ int compare(void)
 }
 
 
+void stat(void)
+{
+    printf("Games: %d\nVictories: %d\nDefeats: %d\nAverage %d %%\n",
+            ngames, victories, defeats,
+            ngames * 100 / victories);
+}
+
+
 void play(void)
 {
-
     tries = MAXTRIES;
+    wingame = 0;
+
     banner();
     start();
     gensecret();
-    wingame = 0;
-    ngames++;
+    ngames++;  /* For stat function */ /* TODO: Implement stat() */
 
     while(tries)
     {
-
         if (!getinput()) exit(0);  /* Exit on Ctrl+D */
         compare();
         if (wingame) break;
@@ -358,14 +382,19 @@ void replay(void)
     char answer[100];
 
     if (wingame)
-    printf(YELLOW "\nCPU: "
-            RESET "You win! The secret was "
-            CYAN "%s\n", secret);
+    {
+        victories++;
+        printf(YELLOW "\nCPU: "
+                RESET "You win! The secret was "
+                CYAN "%s\n", secret);
+    }
     else
-    printf(YELLOW "\nCPU: "
-            RESET "You lose! The secret was "
-            CYAN "%s\n", secret);
-
+    {
+        defeats++;
+        printf(YELLOW "\nCPU: "
+                RESET "You lose! The secret was "
+                CYAN "%s\n", secret);
+    }
 
     puts(RESET "\nDo you want to play again? (y/N).");
 
@@ -381,7 +410,11 @@ void replay(void)
     play();
     else if(answer[0] == 'n')
     exitgame();
-    else puts("NOOOooo");
+    else
+    {
+        puts("NOOOooo");  /* This should never happen */
+        exit(1);
+    }
 }
 
 
@@ -390,7 +423,6 @@ int main(void)
     input = (char*)malloc(SECRETC + 1);
 
     srand(time(NULL));
-    ngames++;
 
     play();
 
