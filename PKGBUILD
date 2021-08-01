@@ -5,13 +5,13 @@ _pkgver_month=07
 _pkgver_day=26
 
 pkgname=cmind
-pkgver=0.10b
+pkgver=0.20
 pkgrel=1
-pkgdesc='Simple console temperature monitor for Linux.'
+pkgdesc='Mastermind®-like console game.'
 arch=('i686' 'x86_64')
 url='https://github.com/mdomlop/cmind'
 source=()
-license=('GPL3')
+license=('GPLv3+')
 
 build() {
     cd $startdir
