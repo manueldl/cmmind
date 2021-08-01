@@ -18,7 +18,7 @@ CFLAGS = -O2 -Wall -ansi -pedantic -static
 
 src/$(EXECUTABLE): src/$(EXECUTABLE).c
 src/$(EXECUTABLE).exe: src/$(EXECUTABLE).c
-	$(CC) $^ -o $@
+	$(CC) $(CFLAGS) -Wno-format-zero-length $^ -o $@
 
 all: elf exe
 
