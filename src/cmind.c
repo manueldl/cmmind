@@ -1,9 +1,18 @@
 #include <stdio.h>
-#include <string.h>
+#include <string.h>  /* strcmp() and others */
 #include <stdlib.h>
-#include <time.h>
+#include <time.h>    /* rand(), sleep() */
 
-#define VERSION "0.10b"
+#define PROGRAM     "CMind"
+#define EXECUTABLE  "cmind"
+#define DESCRIPTION "Mastermind®-like console game."
+#define VERSION     "0.20"
+#define URL         "https://github.com/mdomlop/cmind"
+#define LICENSE     "GPLv3+"
+#define AUTHOR      "Manuel Domínguez López"
+#define NICK        "mdomlop"
+#define MAIL        "zqbzybc@tznvy.pbz"
+
 
 #ifdef _WIN32
 #define RED     ""
@@ -24,26 +33,27 @@
 #define RESET   "\x1b[0m"
 #endif
 
-#define COLORSC 6 /* Number of colors */
-#define SECRETC 4 /* Secret code size */
+#define COLORSC 6   /* Number of colors */
+#define SECRETC 4   /* Secret code size */
 #define MAXTRIES 10 /* Number of attempts */
 
-int wingame;
-size_t tries;
-int ngames = 0;
-int victories = 0;
-int defeats = 0;
-int endgame = 1;
+int wingame;        /* Boolean, if win the game */
+long tries;         /* Number of remaining attempts */
+int ngames = 0;     /* Number of completed games */
+int victories = 0;  /* Number of winned games */
+int defeats = 0;    /* Number of losed games */
 
 char *input;
-char *playagain;
 
-char secret[SECRETC + 1]; /* The +1 is for \0 */
-char colors[] = "abcdef"; /* Valid 'colors' */ /* TODO: Dynamically generate from COLORSC */
+char secret[SECRETC + 1]; /* The +1 is for '\0' */
+char colors[] = "abcdef"; /* Valid 'colors' */
 
 unsigned int sleep(unsigned int seconds);
-void replay(void);
+
+void replay(int fail);
 void stat(void);
+void finish(void);
+void exitgame(void);
 
 
 void banner(void)
@@ -61,7 +71,7 @@ void banner(void)
 }
 
 
-void start(void)
+void start_banner(void)
 {
     printf( "\n"
             RESET "Valid characteres are a, b, c, d, e, f\n"
@@ -75,11 +85,12 @@ void start(void)
 void gensecret (void)
 /* Generate the secret code */
 {
-	int i, j;
+	int i;
     char aux[COLORSC];
 
     for (i = 0; i < COLORSC; i++)
     {
+		int j;
         j = rand() % (COLORSC);
         aux[i] = colors[j];
     }
@@ -88,37 +99,25 @@ void gensecret (void)
     {
         secret[i] = aux[i];
     }
-    /* strcpy(secret, "cebb"); */
 }
 
 
-int getinput(void)
+void getinput(void)
 {
-    int retval;
     printf(BLUE "You: " RESET);
-    retval = scanf("%s", input);
+    if (scanf("%5s", input) != 1) exit(0);  /* Exit game on Ctrl+D */
+	while (getchar() != '\n');  /* clean buffer*/
 
-    if (retval == -1) return 0;
-
-    while (
-            (strlen(input) < SECRETC) ||
-            (strlen(input) > SECRETC)
-            )
+    while (strlen(input) != SECRETC)
     {
         printf("%ld) " RED "CPU: "
                 RESET "Sorry. I want only 4 letters.\n"
-                "Try again:\n", tries);
-
-        free(input);
-        input = (char*)malloc(SECRETC + 1);
+				" Please, try again.\n", tries);
 
         printf(MAGENTA "You: " RESET);
-        retval = scanf("%s", input);
-        if (retval == -1) return 0;
+		if (scanf("%5s", input) != 1) exit(0);  /* Exit game on Ctrl+D */
+		while (getchar() != '\n');  /* clean */
     };
-
-
-    return 1;
 }
 
 
@@ -130,12 +129,14 @@ void help(void)
 
 void info(void)
 {
-	printf(MAGENTA "CPU: " RESET "This is CMind® version %s by mdomlop.\n\n\n",
-		   VERSION);
+	printf(MAGENTA "CPU: " RESET "This is %s® version %s by %s.\n\n\n",
+		   PROGRAM, VERSION, NICK);
 
-	puts("Copyright: 2020 Manuel Domínguez López <mdomlop@gmail.com>\n\n"
-	"License: GPL-3+\n\n"
-	" This program is free software: you can redistribute it and/or modify\n"
+	printf("Copyright: 2020 %s <%s@gmail.com>\n\n"
+	"License: GPL-3+\n\n", AUTHOR, NICK);
+
+	puts(" This program is free software: you can"
+	" redistribute it and/or modify\n"
 	" it under the terms of the GNU General Public License as published by\n"
 	" the Free Software Foundation, either version 3 of the License, or\n"
 	" (at your option) any later version.\n");
@@ -145,7 +146,8 @@ void info(void)
 	" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
 	" GNU General Public License for more details.\n");
 
-	puts(" You should have received a copy of the GNU General Public License\n"
+	puts(" You should have received a copy of the"
+	" GNU General Public License\n"
 	" along with this program. If not, see"
 	" <https://www.gnu.org/licenses/>.\n");
 
@@ -154,10 +156,10 @@ void info(void)
 	" \"/usr/share/common-licenses/GPL-3\".\n\n"
 	" On Arch systems, the complete text of the GNU General\n"
 	" Public License version 3 can be found in"
-	" \"/usr/share/licenses/common/GPL3/license.txt\".\n\n"
-	" You can find the latest version of the source code at:\n"
-	" <https://github.com/mdomlop/cmind>.\n"
-	RESET);
+	" \"/usr/share/licenses/common/GPL3/license.txt\".\n\n");
+
+	printf(" You can find the latest version of the source code at:\n"
+	" <%s>.\n" RESET, URL);
 }
 
 
@@ -202,14 +204,14 @@ int hacks(const char * hack)
     {
         tries++;
         banner();
-        sleep(1);
+		sleep(1);
         info();
         return 1;
     }
     else if(!strcmp(hack, "more"))
     {
         tries += 2;
-        printf(MAGENTA "CPU: " RESET "You have now %ld tries.\n ", tries -1);
+        printf(MAGENTA "CPU: " RESET "Now you have %ld tries.\n", tries -1);
         return 1;
     }
     else if(!strcmp(hack, "less"))
@@ -221,7 +223,8 @@ int hacks(const char * hack)
     else if(!strcmp(hack, "time"))
     {
         tries++ ;
-        puts(MAGENTA "CPU: " RESET "It's soon. You can finish this game.\n");
+        puts(MAGENTA "CPU: " RESET "It's soon."
+				" You can still finish this game.\n");
         return 1;
     }
     else if(!strcmp(hack, "wool"))
@@ -236,15 +239,21 @@ int hacks(const char * hack)
         puts(MAGENTA "CPU: " RESET "HoOLolOo.\n");
         return 1;
     }
+    else if(!strcmp(hack, "unix"))
+    {
+        tries++;
+        puts(MAGENTA "CPU: " RESET "It's a UNIX system! I know this!\n");
+        return 1;
+    }
     else if(!strcmp(hack, "exit"))
     {
         puts(MAGENTA "CPU: " RESET "Quitting.\n");
-        exit(0);
+        exitgame();
     }
     else if(!strcmp(hack, "quit"))
     {
         puts(MAGENTA "CPU: " RESET "Exiting.\n");
-        exit(0);
+        exitgame();
     }
     return 0;
 }
@@ -252,14 +261,13 @@ int hacks(const char * hack)
 
 int validate(const char * s)
 {
-    int i, j;
+    int i;
     char v[] = "abcdef";
     int vsz = sizeof(v) - 1;
-    int ret = 0;
 
     for (i=0; i<SECRETC; i++)
     {
-        ret = 0;
+		int j, ret = 0;
         for (j=0; j < vsz ; j++)
         {
             if(s[i] == v[j]) break;
@@ -344,9 +352,9 @@ int compare(void)
 
 void stat(void)
 {
-    printf("Games: %d\nVictories: %d\nDefeats: %d\nAverage %d %%\n",
-            ngames, victories, defeats,
-            ngames * 100 / victories);
+    printf(RESET "\nGames: %d\nVictories: %d\nDefeats: %d\nAverage %d %%\n",
+            ngames - 1, victories, defeats,
+            ngames > 1 ? victories * 100 / (ngames - 1) : 0); /* No x/0 */
 }
 
 
@@ -356,77 +364,106 @@ void play(void)
     wingame = 0;
 
     banner();
-    start();
+    start_banner();
     gensecret();
-    ngames++;  /* For stat function */ /* TODO: Implement stat() */
+    ngames++;  /* For stat function */
 
     while(tries)
     {
-        if (!getinput()) exit(0);  /* Exit on Ctrl+D */
+        getinput();
         compare();
         if (wingame) break;
         tries--;
     }
-    replay();
+
+	finish();
+	stat();
+	replay(0);
 }
 
 
 void exitgame(void)
 {
-    puts(RESET "Thank you for playing cmind.");
+    puts(RESET " Thank you for playing cmind.");
+    printf(RESET);  /* Normal colors for terminal on exit. */
+	free(input);
+	exit(0);
 }
 
 
-void replay(void)
+void finish(void)
 {
-    char answer[100];
-
     if (wingame)
     {
         victories++;
         printf(YELLOW "\nCPU: "
-                RESET "You win! The secret was "
+                RESET "You WIN! The secret was "
                 CYAN "%s\n", secret);
     }
     else
     {
         defeats++;
         printf(YELLOW "\nCPU: "
-                RESET "You lose! The secret was "
+                RESET "You LOSE! The secret was "
                 CYAN "%s\n", secret);
     }
+}
 
-    puts(RESET "\nDo you want to play again? (y/N).");
 
-    do
-    {
-    scanf("%s", answer);
-    } while(
-            ((answer[0] != 'y') && (answer[1] != '\0')) ||
-            ((answer[0] != 'n') && (answer[1] != '\0'))
-            );
+void replay(int fail)
+{
+	if (!fail)
+		puts(YELLOW "\nCPU: " RESET "Do you want to play again? (Y/N).");
 
-    if(answer[0] == 'y')
-    play();
-    else if(answer[0] == 'n')
-    exitgame();
-    else
-    {
-        puts("NOOOooo");  /* This should never happen */
-        exit(1);
-    }
+    printf(BLUE "You: " RESET);
+
+
+    if (scanf("%2s", input) != 1) exit(1);
+	while (getchar() != '\n');  /* clean */
+
+    while ( (strlen(input) != 1) )
+	{
+        printf(RED "CPU: " RESET "Please. Answer 'y' or 'n'.\n");
+		puts(RESET " Do you want to play again? (Y/N).");
+
+        printf(MAGENTA "You: " RESET);
+		if (scanf("%2s", input) != 1) exit(1);
+		while (getchar() != '\n');  /* clean */
+    };
+
+
+	switch (input[0])
+	{
+		case 'y':
+		case 'Y':
+			printf(GREEN "CPU: " RESET "OK. Let's play again!\n");
+			play();
+			break;
+		case 'n':
+		case 'N':
+			printf(YELLOW "CPU: " RESET "Bye.\n");
+			exitgame();
+			break;
+		default:
+			printf(RED "CPU: " RESET "Please. Answer 'y' or 'n'.\n");
+			puts(RESET " Do you want to play again? (Y/N).");
+			replay(1);
+			puts(RED "Aquí hay un error" RESET);
+			abort();
+	}
 }
 
 
 int main(void)
 {
-    input = (char*)malloc(SECRETC + 1);
+    input = (char*)malloc(SECRETC + 2);
 
     srand(time(NULL));
 
     play();
 
-    printf(RESET);
-    getchar();
+    printf(RESET);  /* Normal colors for terminal on exit. */
+	free(input);
+
     return 0;
 }
