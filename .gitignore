@@ -1,6 +1,9 @@
 # Compiled program
 src/cmind
 
+# Trash
+*.swp
+
 # Object files
 *.o
 *.ko
@@ -26,7 +29,7 @@ src/cmind
 *.hex
 
 # Packages
-*.pkg.tar
+*.tar
 *.gz
 *.bz2
 *.xz
