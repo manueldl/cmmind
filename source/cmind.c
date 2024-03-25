@@ -111,12 +111,8 @@ void gensecret (void)
 void getinput(void)
 {
     printf(WHITE""BLUEB "You:" RESET " ");
-/*
-    if (scanf("%5s", input) != 1) exit(0);
 
-    warning: 'scanf' may overflow; destination buffer in argument 2 has size 5, but the corresponding specifier may require size 6 [-Wfortify-source]
-    */
-    if (scanf("%6s", input) != 1) exit(0);  /* Exit game on Ctrl+D */
+    if (scanf("%5s", input) != 1) exit(0);  /* Exit game on Ctrl+D */
 
     while (getchar() != '\n')
         ;  /* clean buffer*/
@@ -128,9 +124,7 @@ void getinput(void)
 				" Please, try again.\n", tries);
 
         printf(MAGENTA "You: " RESET);
-
-        /* if (scanf("%5s", input) != 1) exit(0); */
-		if (scanf("%6s", input) != 1) exit(0);  /* Exit game on Ctrl+D */
+		if (scanf("%5s", input) != 1) exit(0);  /* Exit game on Ctrl+D */
 		while (getchar() != '\n');  /* clean */
     };
 }
