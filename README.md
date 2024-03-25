@@ -43,3 +43,12 @@ To build a `.deb`:
 It is possible to build a MS Windows _exe_:
 
 	make exe
+
+#### Termux
+
+To build a [Termux](https://termux.dev) package:
+
+	make pkg_termux
+
+Note that is necessary to build **under** Termux environmet, otherwise the
+binary don't work.
