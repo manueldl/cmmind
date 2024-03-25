@@ -14,12 +14,12 @@ PKGBUILD:
 	echo 'pkgdesc="$(DESCRIPTION)"' >> $@
 	#echo 'arch=("any")' >> $@
 	echo 'arch=("i686" "x86_64")' >> $@
-	echo 'makedepends=("btrfs-progs")' >> $@
+	#echo 'makedepends=("btrfs-progs")' >> $@
 	#echo 'changelog=ChangeLog' >> $@
 	echo 'url="$(URL)"' >> $@
 	echo 'source=()' >> $@
 	echo 'license=("$(LICENSE)")' >> $@
-	echo 'backup=(etc/sstab)' >> $@
+	#echo 'backup=(etc/sstab)' >> $@
 	echo 'build() {' >> $@
 	echo 'cd $$startdir' >> $@
 	echo 'make' >> $@
