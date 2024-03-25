@@ -1,5 +1,10 @@
+# Me
+cmind*/
+PKGBUILD
+
 # Trash
 *.swp
+pkg/
 
 # Object files
 *.o
@@ -34,3 +39,4 @@
 *.deb
 *.rpm
 *.apk
+*.zst
