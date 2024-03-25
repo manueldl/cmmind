@@ -50,7 +50,7 @@ all_opti: elf_opti exe_opti
 all_static: elf_static exe_static
 all_opti_static: elf_opti_static exe_opti_static
 all_bin: default all_opti all_static all_opti_static debug
-all_pkg: pkg_arch pkg_debian pkg_ocs
+all_pkg: pkg_arch pkg_debian pkg_ocs pkg_termux
 all: all_bin all_pkg
 
 elf: $(ELFS)
@@ -141,8 +141,9 @@ uninstall:
 include arch.mk
 include debian.mk
 include ocs.mk
+include termux.mk
 
-clean: clean_arch clean_debian clean_ocs
+clean: clean_arch clean_debian clean_ocs clean_termux
 	rm -f $(ELFS)
 	rm -f $(ELFS_OPTI)
 	rm -f $(ELFS_STATIC)
@@ -154,6 +155,6 @@ clean: clean_arch clean_debian clean_ocs
 	rm -f $(EXES_OPTI_STATIC)
 	rm -f $(EXES_DEBUG)
 
-purge: clean purge_arch purge_debian purge_ocs
+purge: clean purge_arch purge_debian purge_ocs purge_termux
 
 .PHONY: clean arch_clean uninstall
