@@ -12,11 +12,29 @@ programming language.
 
 Install
 -------
+You can install directly to your system. Default target directory is `/usr/local/bin/`. Change PREFIX variable to `/usr` if you want to.
 
-Run:
+### Classic mode:
 
 	make && make install
 
 or
 
-	make arch_pkg && pacman -U *.pkg.*
+	make && make install PREFIX=/usr
+	
+
+### Packaging:
+
+#### pacman
+
+Maybe you can install from [AUR](https://aur.archlinux.org/packages/cmind).
+Or build the package it by hand:
+
+	make pkg_arch
+
+#### dpkg
+
+To build a `.deb`:
+
+	make pkg_debian
+	
