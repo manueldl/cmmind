@@ -21,7 +21,7 @@ You can install directly to your system. Default target directory is `/usr/local
 or
 
 	make && make install PREFIX=/usr
-	
+
 
 ### Packaging:
 
@@ -37,4 +37,9 @@ Or build the package it by hand:
 To build a `.deb`:
 
 	make pkg_debian
-	
+
+#### Windows executable
+
+It is possible to build a MS Windows _exe_:
+
+	make exe
