@@ -1,8 +1,8 @@
 SOURCES = source/cmind.c
 INFO = source/cmind.c
 
-include make/makefile.in
-include make/arch.mk
-include make/debian.mk
-include make/ocs.mk
-include make/termux.mk
+include mk/binary.mk
+include mk/arch.mk
+include mk/debian.mk
+include mk/ocs.mk
+include mk/termux.mk
